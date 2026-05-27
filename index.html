@@ -561,6 +561,7 @@
         <div class="tabs" role="tablist">
           <button class="tab-btn" role="tab" aria-selected="true" aria-controls="tab-reference" id="btn-reference" type="button">Reference &amp; architecture</button>
           <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-build" id="btn-build" type="button">Build guide (step by step)</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-pricing" id="btn-pricing" type="button">Pricing &amp; capacity</button>
         </div>
       </div>
     </nav>
@@ -1396,6 +1397,325 @@ az keyvault set-policy --name kv-fabric-secrets \
 
     </div><!-- /tab-build -->
 
+    <div class="tab-panel" id="tab-pricing" role="tabpanel" aria-labelledby="btn-pricing" hidden>
+
+      <section>
+        <div class="container">
+          <h2>Pricing &amp; capacity</h2>
+          <p class="section-kicker">
+            How to translate workspace-utilization analysis into a capacity decision — number of
+            capacities, size of each, and whether to reserve. Designed to answer the question:
+            <em>"how does pricing constrain or influence our architecture?"</em>
+          </p>
+
+          <blockquote class="summary">
+            <strong>The customer's question:</strong> When we determine which Fabric capacities
+            (and how many), what are the pricing considerations and gotchas — especially around
+            reservation and commitment?
+          </blockquote>
+
+          <div class="note" style="margin-top: 24px;">
+            <strong>Pricing freshness</strong>
+            Fabric F-SKU list prices and reservation discounts change. The numbers below are the
+            ranges we quoted in the meeting (≈40–41% 1-year reservation savings) and serve as a
+            planning baseline. Always verify against the live
+            <a href="https://azure.microsoft.com/en-us/pricing/details/microsoft-fabric/" style="color: var(--cp-link);">Microsoft Fabric pricing page</a>
+            for your region before quoting a customer.
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>Step 1 — How many capacities?</h2>
+          <p class="section-kicker">
+            Capacity count is an <strong>architectural</strong> decision, not just a cost
+            decision. These four factors drive it.
+          </p>
+          <div class="grid-2">
+            <div class="card">
+              <h3>Environment separation</h3>
+              <p style="color: var(--cp-text-muted); margin: 0;">At minimum: one PROD capacity, one Non-PROD. Sharing capacity between prod reports and dev experimentation is the #1 cause of mystery prod throttling.</p>
+            </div>
+            <div class="card">
+              <h3>Workload isolation</h3>
+              <p style="color: var(--cp-text-muted); margin: 0;">Heavy data-engineering workloads (Spark notebooks, pipelines) on the same capacity as latency-sensitive Power BI reports will starve the reports. Split them.</p>
+            </div>
+            <div class="card">
+              <h3>Business unit chargeback</h3>
+              <p style="color: var(--cp-text-muted); margin: 0;">If finance needs to allocate cost per BU, separate capacities are the cleanest mechanism. One bill, one owner, one capacity.</p>
+            </div>
+            <div class="card">
+              <h3>Blast radius &amp; SLA</h3>
+              <p style="color: var(--cp-text-muted); margin: 0;">Mission-critical executive reporting on its own capacity means a runaway dataflow elsewhere can't take it down. Tier your capacities by SLA.</p>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 32px;">Typical starting topology</h3>
+          <table class="roadmap" style="margin-top: 12px;">
+            <thead>
+              <tr>
+                <th>Capacity</th>
+                <th>Purpose</th>
+                <th>Reserved?</th>
+                <th>Typical SKU range</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>PROD-BI</strong></td>
+                <td>Production Power BI reports, semantic models, exec dashboards</td>
+                <td><span class="pill success">Yes</span></td>
+                <td>F64 – F256</td>
+              </tr>
+              <tr>
+                <td><strong>PROD-DE</strong></td>
+                <td>Production data engineering — pipelines, notebooks, warehouse</td>
+                <td><span class="pill success">Yes</span></td>
+                <td>F64 – F512</td>
+              </tr>
+              <tr>
+                <td><strong>NON-PROD</strong></td>
+                <td>Dev / Test / UAT — bursty, often idle overnight</td>
+                <td><span class="pill warning">PAYG (pausable)</span></td>
+                <td>F8 – F32</td>
+              </tr>
+              <tr>
+                <td><strong>SANDBOX</strong></td>
+                <td>Citizen-dev experimentation, training</td>
+                <td><span class="pill">PAYG (pausable)</span></td>
+                <td>F2 – F8</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>Step 2 — How big each capacity?</h2>
+          <p class="section-kicker">Capacity Units (CU) drive everything. Size from <em>observed</em> demand, not guesses.</p>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Sizing inputs</h3>
+              <ul>
+                <li><strong>Peak concurrent users</strong> across all reports on the capacity</li>
+                <li><strong>Dataset sizes</strong> in memory (sum of largest concurrent models)</li>
+                <li><strong>Refresh schedule overlap</strong> — the more refreshes that hit the same 5-min window, the more CU you need</li>
+                <li><strong>DirectQuery vs Import vs Direct Lake</strong> mix — DirectQuery and DataFlow Gen2 are CU-hungry</li>
+                <li><strong>AI / Copilot in Fabric</strong> usage (if enabled) — meaningful CU consumption per call</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>The right method</h3>
+              <ol>
+                <li>Run a 30-day <strong>Trial capacity</strong> bound to a representative workspace.</li>
+                <li>Pull the <strong>Microsoft Fabric Capacity Metrics app</strong> from AppSource and load it against the trial.</li>
+                <li>Identify the <strong>p95 CU%</strong> over the busiest week.</li>
+                <li>If p95 is &lt; 60% on a trial F64, you likely fit on F64. If p95 sits &gt; 80%, go up one SKU.</li>
+                <li>Leave 20–30% headroom for growth and refresh-stampede days.</li>
+              </ol>
+              <div class="note" style="margin-top: 12px;"><strong>Watch out</strong>Fabric uses a 24-hour <em>smoothing window</em> before throttling — bursts feel free, but sustained overruns will throttle the next day. Don't size off short bursts alone.</div>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 32px;">F-SKU quick reference</h3>
+          <table class="roadmap" style="margin-top: 12px;">
+            <thead>
+              <tr><th>SKU</th><th>Capacity Units (CU)</th><th>Memory ceiling</th><th>Good for</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>F2</td><td>2</td><td>3 GB</td><td>Tiny experiments, citizen-dev sandboxes</td></tr>
+              <tr><td>F8</td><td>8</td><td>10 GB</td><td>Small team Non-PROD, learning</td></tr>
+              <tr><td>F32</td><td>32</td><td>40 GB</td><td>Mid-size Non-PROD or BU-scoped PROD</td></tr>
+              <tr><td>F64</td><td>64</td><td>80 GB</td><td><strong>Entry to enterprise PROD</strong> — unlocks Copilot, Power BI Premium features, free Power BI viewer licenses</td></tr>
+              <tr><td>F128</td><td>128</td><td>160 GB</td><td>Larger PROD or PROD-DE</td></tr>
+              <tr><td>F256</td><td>256</td><td>320 GB</td><td>Heavy enterprise PROD-BI + PROD-DE</td></tr>
+              <tr><td>F512+</td><td>512+</td><td>640 GB+</td><td>Large-scale DE / multi-tenant analytics</td></tr>
+            </tbody>
+          </table>
+          <p style="color: var(--cp-text-muted); font-size: 13px; margin-top: 8px;">
+            F64 is the inflection point: below it, <strong>every report viewer needs a Power BI Pro license</strong>. At F64 and above, viewers consume reports without a per-user license — often the deciding factor for large user bases.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>Step 3 — Reserved vs Pay-as-you-go</h2>
+          <p class="section-kicker">The single biggest cost lever, and the source of every "we wish we'd known" conversation.</p>
+
+          <table class="roadmap">
+            <thead>
+              <tr>
+                <th style="width: 26%;"></th>
+                <th>Pay-as-you-go (PAYG)</th>
+                <th>1-year reserved</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Billing model</strong></td>
+                <td>Per-second, while capacity is running</td>
+                <td>1-year commitment, paid monthly or upfront</td>
+              </tr>
+              <tr>
+                <td><strong>Discount</strong></td>
+                <td><span class="pill">None</span></td>
+                <td><span class="pill success">≈ 40–41% off list</span></td>
+              </tr>
+              <tr>
+                <td><strong>Pause / resume</strong></td>
+                <td><span class="pill success">Yes</span> — pay nothing when paused</td>
+                <td><span class="pill danger">No</span> — billed for the full term regardless</td>
+              </tr>
+              <tr>
+                <td><strong>Scale up (e.g. F64 → F128)</strong></td>
+                <td>Yes, instantly</td>
+                <td><span class="pill success">Yes</span> — but the original reservation continues on the original SKU; you reserve the larger one separately or pay PAYG on the delta</td>
+              </tr>
+              <tr>
+                <td><strong>Scale down (e.g. F64 → F32)</strong></td>
+                <td>Yes, instantly</td>
+                <td><span class="pill danger">No</span> — locked at reserved SKU for the term</td>
+              </tr>
+              <tr>
+                <td><strong>Cancel early</strong></td>
+                <td>Anytime</td>
+                <td>Limited — exchange/refund subject to Azure reservation rules</td>
+              </tr>
+              <tr>
+                <td><strong>Best fit</strong></td>
+                <td>Bursty Non-PROD, dev/test, training, anything you can pause overnight or weekends</td>
+                <td>Steady 24×7 PROD with predictable baseline (typical of healthcare reporting)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <div class="note" style="margin-top: 16px;">
+            <strong>The trade-off in one line</strong>
+            Reserving locks in ~40% savings <em>but</em> takes the "scale down" lever off the table for a year. If your floor is steady, reserve at the floor and burst up with PAYG above it.
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>Recommendation matrix</h2>
+          <p class="section-kicker">Decision rules we apply when sizing for a healthcare customer with 24×7 reporting needs.</p>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3><span class="pill success">Reserve</span> 1-year</h3>
+              <ul>
+                <li>Capacity runs 24×7 (or close to it)</li>
+                <li>Demand has been observed for ≥ 90 days and is stable</li>
+                <li>Workload is regulated / mission-critical and pausing is unacceptable</li>
+                <li>The savings (~40%) materially exceed the operational cost of being locked in</li>
+              </ul>
+              <p style="color: var(--cp-text-muted); margin-top: 8px;">→ PROD-BI, PROD-DE almost always belong here.</p>
+            </div>
+            <div class="card">
+              <h3><span class="pill warning">Stay PAYG</span></h3>
+              <ul>
+                <li>Capacity is genuinely bursty or seasonal</li>
+                <li>You can pause it overnight or on weekends (Non-PROD)</li>
+                <li>You're still inside the first 60–90 days and don't yet have a defensible baseline</li>
+                <li>Workload is exploratory and may be retired</li>
+              </ul>
+              <p style="color: var(--cp-text-muted); margin-top: 8px;">→ NON-PROD, SANDBOX, short-lived project capacities.</p>
+            </div>
+          </div>
+
+          <h3 style="margin-top: 32px;">The hybrid pattern (recommended)</h3>
+          <div class="card" style="margin-top: 8px;">
+            <p style="margin: 0;">
+              <strong>Reserve the floor, burst with PAYG.</strong> If your PROD baseline is F64 24×7 and you spike to F128 for end-of-month close, reserve F64 for the year (~40% savings on the baseline) and pay PAYG only for the F128 upgrade during the 3-day window each month. You capture most of the discount without losing the scale-down lever entirely.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>Gotchas to surface up front</h2>
+          <p class="section-kicker">Things customers wish they'd asked about <em>before</em> signing the reservation.</p>
+          <div class="checklist">
+            <div class="check"><span class="icon">!</span><div class="body"><strong>Reservations are per-region, per-SKU</strong><span>A reserved F64 in East US 2 does not cover an F64 in West US. Lock the region first.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>Scale-down is locked for the term</strong><span>You can scale up freely, but you cannot scale below the reserved size until renewal. Size conservatively.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>24-hour smoothing hides overruns</strong><span>Fabric averages CU over 24 hours before throttling. Spikes feel free until they accumulate — then throttling lands the next day, often unexpectedly.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>F64 is the licensing cliff</strong><span>Below F64 every report viewer needs Pro. At F64+ viewers are free. Sometimes F64 reserved is cheaper than F32 + 500 Pro licenses.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>Pause does NOT work on reserved capacity</strong><span>You pay for the full reservation term whether the capacity is paused or not. Only PAYG can be paused for true zero billing.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>Trial capacity ≠ production sizing</strong><span>Trials are F64-equivalent shared infrastructure. Use them to <em>profile</em> your workload, not to estimate steady-state cost.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>Reservation discount applies only to the compute</strong><span>OneLake storage, egress, and per-call AI / Copilot consumption are billed separately and are NOT discounted by the capacity reservation.</span></div></div>
+            <div class="check"><span class="icon">!</span><div class="body"><strong>Power BI Premium P-SKUs are being retired</strong><span>If they're still on P-SKUs, factor migration to F-SKUs into the same planning cycle — the reservation discount and the new model only apply to F-SKUs.</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>Illustrative cost example</h2>
+          <p class="section-kicker">
+            Numbers are <strong>illustrative only</strong> — they use round figures to show the
+            <em>shape</em> of the decision, not exact pricing. Always confirm with the live
+            pricing page for the customer's region and currency before quoting.
+          </p>
+          <table class="roadmap">
+            <thead>
+              <tr>
+                <th>Scenario</th>
+                <th>Monthly list (PAYG)</th>
+                <th>Monthly reserved (1-yr)</th>
+                <th>Annual saving</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>F64 PROD running 24×7</td>
+                <td>~ $8,400</td>
+                <td>~ $5,000</td>
+                <td><span class="pill success">~ $40k / yr</span></td>
+              </tr>
+              <tr>
+                <td>F128 PROD-DE running 24×7</td>
+                <td>~ $16,800</td>
+                <td>~ $9,900</td>
+                <td><span class="pill success">~ $83k / yr</span></td>
+              </tr>
+              <tr>
+                <td>F8 Non-PROD running 50 hrs/wk (paused otherwise)</td>
+                <td>~ $325</td>
+                <td>n/a — reservation would cost more here</td>
+                <td><span class="pill warning">PAYG wins</span></td>
+              </tr>
+            </tbody>
+          </table>
+          <p style="color: var(--cp-text-muted); font-size: 13px; margin-top: 12px;">
+            Figures rounded for illustration. Discount assumed at ~41% per the meeting baseline; verify with current Azure pricing for the target region.
+          </p>
+        </div>
+      </section>
+
+      <section>
+        <div class="container">
+          <h2>What to do next</h2>
+          <div class="checklist">
+            <div class="check"><span class="icon">→</span><div class="body"><strong>Run a 30-day workload profile</strong><span>Trial capacity + Fabric Capacity Metrics app on a representative workspace. Don't reserve until you have a baseline.</span></div></div>
+            <div class="check"><span class="icon">→</span><div class="body"><strong>Decide capacity count first, size second</strong><span>Environment + workload + chargeback boundaries drive count. Size each one independently from observed CU%.</span></div></div>
+            <div class="check"><span class="icon">→</span><div class="body"><strong>Reserve only the steady floor</strong><span>Reserve PROD at the baseline SKU. Keep Non-PROD on PAYG so you can pause it. Burst above the floor with PAYG.</span></div></div>
+            <div class="check"><span class="icon">→</span><div class="body"><strong>Set monthly cost &amp; throttling alerts</strong><span>Budget alerts in Cost Management + capacity-utilization alerts in the Fabric admin portal. Catch surprises in week 1, not in the invoice.</span></div></div>
+          </div>
+
+          <blockquote class="summary" style="margin-top: 28px;">
+            <strong>One-line summary:</strong> Reserve the steady 24×7 PROD floor for a ~40% saving, keep Non-PROD on PAYG so you can pause it, and never reserve until you have at least 30 days of observed workload data behind you.
+          </blockquote>
+        </div>
+      </section>
+
+    </div><!-- /tab-pricing -->
+
     <footer>
       <div class="container">
         <p>Reference architecture · server names anonymized · published for public technical
@@ -1424,7 +1744,9 @@ az keyvault set-policy --name kv-fabric-secrets \
           else panel.setAttribute("hidden", "");
         });
         if (history.replaceState) {
-          const hash = tabId === "tab-build" ? "#build" : "";
+          let hash = "";
+          if (tabId === "tab-build") hash = "#build";
+          else if (tabId === "tab-pricing") hash = "#pricing";
           history.replaceState(null, "", window.location.pathname + window.location.search + hash);
         }
         window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
@@ -1436,6 +1758,8 @@ az keyvault set-policy --name kv-fabric-secrets \
 
       if (window.location.hash === "#build") {
         selectTab("tab-build");
+      } else if (window.location.hash === "#pricing") {
+        selectTab("tab-pricing");
       }
     </script>
   </body>
