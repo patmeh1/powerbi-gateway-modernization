@@ -1,0 +1,840 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Power BI Gateway Modernization — Hybrid Analytics Reference</title>
+    <meta
+      name="description"
+      content="Reference architecture and migration plan for modernizing on-prem Power BI Gateway infrastructure to support Microsoft Fabric and hybrid analytics."
+    />
+    <script>
+      (() => {
+        const param = new URLSearchParams(window.location.search).get("clawpilotTheme");
+        const theme =
+          param ||
+          (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+    <style>
+      :root {
+        color-scheme: light;
+        --cp-bg: #f7f4ef;
+        --cp-bg-elevated: #fcfbf8;
+        --cp-surface: #ffffff;
+        --cp-surface-soft: #f5f5f5;
+        --cp-border: #dedede;
+        --cp-border-strong: #919191;
+        --cp-text: #242424;
+        --cp-text-muted: #5c5c5c;
+        --cp-text-soft: #6f6f6f;
+        --cp-accent: #b11f4b;
+        --cp-accent-hover: #9a1a41;
+        --cp-accent-soft: rgba(177, 31, 75, 0.08);
+        --cp-accent-fg: #ffffff;
+        --cp-success: #16a34a;
+        --cp-danger: #dc2626;
+        --cp-warning: #f59e0b;
+        --cp-link: #0078d4;
+        --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.12);
+        --cp-overlay: rgba(255, 255, 255, 0.8);
+        --cp-panel: rgba(255, 255, 255, 0.86);
+        --cp-panel-strong: rgba(255, 255, 255, 0.96);
+        --cp-sheen: rgba(255, 255, 255, 0.55);
+        --cp-highlight: rgba(177, 31, 75, 0.12);
+      }
+      html[data-theme="dark"] {
+        color-scheme: dark;
+        --cp-bg: #3d3b3a;
+        --cp-bg-elevated: #343231;
+        --cp-surface: #292929;
+        --cp-surface-soft: #2e2e2e;
+        --cp-border: #474747;
+        --cp-border-strong: #5f5f5f;
+        --cp-text: #dedede;
+        --cp-text-muted: #919191;
+        --cp-text-soft: #b0b0b0;
+        --cp-accent: #fd8ea1;
+        --cp-accent-hover: #fb7b91;
+        --cp-accent-soft: rgba(253, 142, 161, 0.14);
+        --cp-accent-fg: #1a1a1a;
+        --cp-success: #4ade80;
+        --cp-danger: #f87171;
+        --cp-warning: #fbbf24;
+        --cp-link: #4da6ff;
+        --cp-shadow: 0 18px 48px rgba(0, 0, 0, 0.32);
+        --cp-overlay: rgba(41, 41, 41, 0.88);
+        --cp-panel: rgba(41, 41, 41, 0.72);
+        --cp-panel-strong: rgba(41, 41, 41, 0.96);
+        --cp-sheen: rgba(255, 255, 255, 0.04);
+        --cp-highlight: rgba(253, 142, 161, 0.12);
+      }
+
+      * { box-sizing: border-box; }
+      html, body { margin: 0; padding: 0; }
+      body {
+        font-family: "Segoe UI", Aptos, Calibri, -apple-system, BlinkMacSystemFont, sans-serif;
+        background: var(--cp-bg);
+        color: var(--cp-text);
+        line-height: 1.55;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+      }
+      code, pre { font-family: Consolas, "Courier New", Courier, monospace; }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header.hero {
+        position: relative;
+        padding: 56px 0 40px;
+        border-bottom: 1px solid var(--cp-border);
+        background: var(--cp-bg-elevated);
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 32px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        color: var(--cp-text-muted);
+        font-size: 14px;
+        letter-spacing: 0.02em;
+      }
+      .brand-dot {
+        width: 10px; height: 10px; border-radius: 50%;
+        background: var(--cp-accent);
+      }
+      .theme-toggle {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        color: var(--cp-text);
+        padding: 6px 14px;
+        border-radius: 0.625rem;
+        font-size: 13px;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .theme-toggle:hover { border-color: var(--cp-border-strong); }
+
+      .eyebrow {
+        display: inline-block;
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        padding: 6px 12px;
+        border-radius: 999px;
+        margin-bottom: 16px;
+      }
+      h1 {
+        font-size: clamp(28px, 4vw, 44px);
+        line-height: 1.15;
+        margin: 0 0 16px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      .lede {
+        font-size: 18px;
+        color: var(--cp-text-muted);
+        max-width: 820px;
+        margin: 0 0 20px;
+      }
+      blockquote.summary {
+        margin: 24px 0 0;
+        padding: 18px 22px;
+        border-left: 4px solid var(--cp-accent);
+        background: var(--cp-surface);
+        border-radius: 0 0.625rem 0.625rem 0;
+        font-size: 16px;
+        color: var(--cp-text);
+        max-width: 920px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+      }
+
+      section { padding: 56px 0; border-bottom: 1px solid var(--cp-border); }
+      section:last-of-type { border-bottom: none; }
+
+      h2 {
+        font-size: 28px;
+        margin: 0 0 8px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+      }
+      h3 {
+        font-size: 18px;
+        margin: 0 0 8px;
+        font-weight: 600;
+      }
+      .section-kicker {
+        color: var(--cp-text-muted);
+        margin: 0 0 28px;
+        max-width: 760px;
+      }
+
+      .card {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+      }
+
+      .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+      @media (max-width: 900px) {
+        .grid-2, .grid-3 { grid-template-columns: 1fr; }
+      }
+
+      .use-case {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .use-case .num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px; height: 32px;
+        border-radius: 8px;
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        font-weight: 700;
+        font-size: 14px;
+      }
+      .use-case h3 { margin-top: 6px; }
+      .use-case p { color: var(--cp-text-muted); margin: 0; }
+      .use-case ul { margin: 8px 0 0; padding-left: 18px; color: var(--cp-text-muted); }
+      .use-case ul li { margin-bottom: 4px; }
+
+      .pill {
+        display: inline-block;
+        padding: 3px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--cp-border);
+        color: var(--cp-text-muted);
+        background: var(--cp-surface-soft);
+      }
+      .pill.danger { color: var(--cp-danger); border-color: rgba(220, 38, 38, 0.25); background: rgba(220, 38, 38, 0.06); }
+      .pill.success { color: var(--cp-success); border-color: rgba(22, 163, 74, 0.25); background: rgba(22, 163, 74, 0.06); }
+      .pill.warning { color: var(--cp-warning); border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.08); }
+
+      .diagram-wrap {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        border-radius: 16px;
+        padding: 16px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+        overflow-x: auto;
+      }
+      .diagram-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        padding: 4px 6px;
+      }
+      .diagram-title h3 { margin: 0; }
+
+      svg.arch { width: 100%; height: auto; display: block; }
+      svg.arch text { font-family: "Segoe UI", Aptos, Calibri, sans-serif; }
+
+      table.roadmap {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--cp-surface);
+        border-radius: 16px;
+        overflow: hidden;
+        border: 1px solid var(--cp-border);
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+      }
+      table.roadmap th, table.roadmap td {
+        text-align: left;
+        padding: 14px 18px;
+        border-bottom: 1px solid var(--cp-border);
+        vertical-align: top;
+      }
+      table.roadmap th {
+        background: var(--cp-surface-soft);
+        font-weight: 600;
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--cp-text-muted);
+      }
+      table.roadmap tbody tr:last-child td { border-bottom: none; }
+
+      .checklist {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+      @media (max-width: 760px) { .checklist { grid-template-columns: 1fr; } }
+      .check {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 14px 16px;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        border-radius: 0.625rem;
+      }
+      .check .icon {
+        flex-shrink: 0;
+        width: 22px; height: 22px;
+        border-radius: 6px;
+        background: var(--cp-accent-soft);
+        color: var(--cp-accent);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 13px;
+        margin-top: 1px;
+      }
+      .check .body { flex: 1; }
+      .check .body strong { display: block; margin-bottom: 2px; font-size: 14px; }
+      .check .body span { color: var(--cp-text-muted); font-size: 13px; }
+
+      .talking {
+        background: var(--cp-surface);
+        border-left: 4px solid var(--cp-accent);
+        padding: 16px 20px;
+        border-radius: 0 0.625rem 0.625rem 0;
+        margin-bottom: 14px;
+      }
+      .talking .label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--cp-accent);
+        display: block;
+        margin-bottom: 4px;
+      }
+      .talking p { margin: 0; color: var(--cp-text); }
+
+      footer {
+        padding: 32px 0;
+        text-align: center;
+        color: var(--cp-text-muted);
+        font-size: 13px;
+        border-top: 1px solid var(--cp-border);
+        background: var(--cp-bg-elevated);
+      }
+      footer a { color: var(--cp-link); text-decoration: none; }
+      footer a:hover { text-decoration: underline; }
+
+      /* Diagram legend */
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        padding: 0 6px;
+        margin-top: 8px;
+        font-size: 12px;
+        color: var(--cp-text-muted);
+      }
+      .legend .sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <div class="container">
+        <div class="topbar">
+          <div class="brand">
+            <span class="brand-dot"></span>
+            <span>Hybrid Analytics Reference</span>
+          </div>
+          <button class="theme-toggle" id="themeToggle" type="button">Toggle theme</button>
+        </div>
+
+        <span class="eyebrow">Reference Architecture &amp; Use Case</span>
+        <h1>Power BI Gateway Modernization for Microsoft Fabric</h1>
+        <p class="lede">
+          Modernize and standardize Power BI Gateway architecture to securely and sustainably
+          connect on-premise data sources to Microsoft Fabric, while reducing technical debt and
+          improving scalability.
+        </p>
+        <blockquote class="summary">
+          <strong>Core use case:</strong> Move away from legacy, unsupported on-prem infrastructure
+          (Windows Server 2012 + older SQL), re-architect Power BI Gateway connectivity to support
+          Fabric / cloud analytics, and reduce operational complexity from many point-to-point
+          gateway connections.
+        </blockquote>
+      </div>
+    </header>
+
+    <!-- PROBLEM -->
+    <section id="problem">
+      <div class="container">
+        <h2>The problem being solved</h2>
+        <p class="section-kicker">
+          What surfaced in the customer conversation — the current Power BI Gateway estate is
+          fragmented, running on unsupported infrastructure, and is becoming a bottleneck for
+          Fabric adoption.
+        </p>
+        <div class="grid-2">
+          <div class="card">
+            <h3>Current state pain points</h3>
+            <ul>
+              <li><span class="pill danger">Legacy</span> Gateways running on <strong>Windows Server 2012</strong> (out of support)</li>
+              <li><span class="pill danger">Shared</span> Installed on multi-purpose machines, mixing prod &amp; non-prod workloads</li>
+              <li><span class="pill warning">Sprawl</span> Many one-by-one connections through gateways with no clear pattern</li>
+              <li><span class="pill warning">Governance</span> No standard architecture, ownership, or environment alignment</li>
+              <li><span class="pill warning">Risk</span> Security, stability, and compliance exposure on aging SQL infrastructure</li>
+            </ul>
+          </div>
+          <div class="card">
+            <h3>Constraints that must be respected</h3>
+            <ul>
+              <li><span class="pill">Hybrid</span> On-prem connectivity must remain — SQL Server, AD, Linux/file shares</li>
+              <li><span class="pill">Compliance</span> Healthcare data residency &amp; HIPAA controls in scope</li>
+              <li><span class="pill">Continuity</span> Active reporting workloads cannot be disrupted during migration</li>
+              <li><span class="pill">Footprint</span> Hybrid architecture is the target for the foreseeable future</li>
+              <li><span class="pill">Cost</span> Customer is evaluating internal effort vs. Microsoft-assisted delivery</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ARCHITECTURE -->
+    <section id="architecture">
+      <div class="container">
+        <h2>Current vs. target architecture</h2>
+        <p class="section-kicker">
+          Server names are anonymized (Server1, Server2, …) for public sharing. The shape of the
+          current diagram is based on the customer's whiteboard; the target diagram reflects
+          recommended patterns for HA, environment separation, and Fabric readiness.
+        </p>
+
+        <div class="grid-2">
+          <!-- CURRENT -->
+          <div class="diagram-wrap">
+            <div class="diagram-title">
+              <h3>Current state</h3>
+              <span class="pill danger">Legacy</span>
+            </div>
+            <svg viewBox="0 0 900 520" class="arch" role="img" aria-label="Current architecture diagram">
+              <defs>
+                <marker id="arrow1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--cp-border-strong)" />
+                </marker>
+              </defs>
+              <!-- column headers -->
+              <rect x="20" y="20" width="270" height="36" rx="8" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="155" y="44" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">On-premise data sources</text>
+              <rect x="315" y="20" width="270" height="36" rx="8" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="450" y="44" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">Gateway connectivity</text>
+              <rect x="610" y="20" width="270" height="36" rx="8" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="745" y="44" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">Cloud analytics</text>
+
+              <!-- data sources -->
+              <rect x="40" y="100" width="230" height="320" rx="14" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="155" y="140" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Customer on-prem</text>
+              <text x="155" y="175" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">SQL DB — Source A</text>
+              <text x="155" y="200" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">SQL DB — Source B</text>
+              <text x="155" y="225" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">Shared servers (DAR)</text>
+              <text x="155" y="250" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">SharePoint</text>
+              <text x="155" y="275" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">Active Directory</text>
+              <text x="155" y="300" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">Snowflake</text>
+              <text x="155" y="345" text-anchor="middle" font-size="11" fill="var(--cp-danger)" font-weight="600">Windows Server 2012 hosts</text>
+              <text x="155" y="365" text-anchor="middle" font-size="11" fill="var(--cp-danger)">Shared / multi-purpose machines</text>
+
+              <!-- gateways -->
+              <g>
+                <text x="450" y="100" text-anchor="middle" font-size="12" fill="var(--cp-text-muted)" font-weight="600">Gateway: DAR</text>
+                <rect x="345" y="110" width="210" height="50" rx="10" fill="var(--cp-accent-soft)" stroke="var(--cp-accent)" />
+                <text x="450" y="135" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server1</text>
+                <text x="450" y="151" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">single instance</text>
+              </g>
+              <g>
+                <text x="450" y="195" text-anchor="middle" font-size="12" fill="var(--cp-text-muted)" font-weight="600">Gateway: Power BI (Cluster)</text>
+                <rect x="345" y="205" width="210" height="60" rx="10" fill="var(--cp-accent-soft)" stroke="var(--cp-accent)" />
+                <text x="450" y="230" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server2</text>
+                <text x="450" y="248" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server3</text>
+              </g>
+              <g>
+                <text x="450" y="305" text-anchor="middle" font-size="12" fill="var(--cp-text-muted)" font-weight="600">Gateway: PBI TST</text>
+                <rect x="345" y="315" width="210" height="50" rx="10" fill="var(--cp-accent-soft)" stroke="var(--cp-accent)" />
+                <text x="450" y="340" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server4</text>
+                <text x="450" y="356" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">prod &amp; non-prod mixed</text>
+              </g>
+
+              <!-- cloud -->
+              <rect x="625" y="100" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="125" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Power Apps</text>
+              <text x="745" y="145" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">Project-based apps</text>
+
+              <rect x="625" y="180" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="205" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Power BI + Fabric</text>
+              <text x="745" y="225" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">Pipelines, notebooks, reports, models</text>
+
+              <rect x="625" y="260" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="285" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Power Automate</text>
+              <text x="745" y="305" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">Business process workflows</text>
+
+              <rect x="625" y="340" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="365" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Snowflake</text>
+              <text x="745" y="385" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">Data / AI engineering</text>
+
+              <!-- arrows source -> gateway -->
+              <path d="M 270 230 C 310 230, 310 135, 345 135" stroke="var(--cp-border-strong)" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+              <path d="M 270 260 C 310 260, 310 235, 345 235" stroke="var(--cp-border-strong)" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+              <path d="M 270 290 C 310 290, 310 340, 345 340" stroke="var(--cp-border-strong)" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+
+              <!-- arrows gateway -> cloud (many to many = messy) -->
+              <path d="M 555 135 C 590 135, 590 210, 625 210" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+              <path d="M 555 235 C 590 235, 590 130, 625 130" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+              <path d="M 555 235 C 590 235, 590 290, 625 290" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+              <path d="M 555 340 C 590 340, 590 210, 625 210" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+              <path d="M 555 235 C 590 235, 590 370, 625 370" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow1)" />
+
+              <!-- footer bar -->
+              <rect x="40" y="450" width="825" height="50" rx="10" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="452" y="480" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">Ad-hoc gateway administration · No central governance</text>
+            </svg>
+            <div class="legend">
+              <span><span class="sw" style="background: var(--cp-accent);"></span>Gateway host</span>
+              <span><span class="sw" style="background: var(--cp-border-strong);"></span>On-prem flow</span>
+              <span><span class="sw" style="background: var(--cp-border-strong); opacity: 0.6;"></span>Cloud workload flow (point-to-point sprawl)</span>
+            </div>
+          </div>
+
+          <!-- TARGET -->
+          <div class="diagram-wrap">
+            <div class="diagram-title">
+              <h3>Target state</h3>
+              <span class="pill success">Modernized</span>
+            </div>
+            <svg viewBox="0 0 900 520" class="arch" role="img" aria-label="Target architecture diagram">
+              <defs>
+                <marker id="arrow2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--cp-accent)" />
+                </marker>
+                <marker id="arrow2g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                  <path d="M 0 0 L 10 5 L 0 10 z" fill="var(--cp-border-strong)" />
+                </marker>
+              </defs>
+              <!-- column headers -->
+              <rect x="20" y="20" width="270" height="36" rx="8" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="155" y="44" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">On-premise data sources</text>
+              <rect x="315" y="20" width="270" height="36" rx="8" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="450" y="44" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">Dedicated gateway clusters</text>
+              <rect x="610" y="20" width="270" height="36" rx="8" fill="var(--cp-surface-soft)" stroke="var(--cp-border)" />
+              <text x="745" y="44" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)" font-weight="600">Fabric &amp; Power Platform</text>
+
+              <!-- data sources -->
+              <rect x="40" y="100" width="230" height="320" rx="14" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="155" y="140" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Customer on-prem</text>
+              <text x="155" y="175" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">SQL DB — Source A</text>
+              <text x="155" y="200" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">SQL DB — Source B</text>
+              <text x="155" y="225" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">Shared servers (DAR)</text>
+              <text x="155" y="250" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">SharePoint</text>
+              <text x="155" y="275" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">Active Directory</text>
+              <text x="155" y="300" text-anchor="middle" font-size="13" fill="var(--cp-text-muted)">Snowflake</text>
+              <text x="155" y="345" text-anchor="middle" font-size="11" fill="var(--cp-success)" font-weight="600">Windows Server 2022 (supported)</text>
+              <text x="155" y="365" text-anchor="middle" font-size="11" fill="var(--cp-success)">Dedicated, hardened, sized for purpose</text>
+
+              <!-- gateway clusters -->
+              <g>
+                <text x="450" y="100" text-anchor="middle" font-size="12" fill="var(--cp-text-muted)" font-weight="600">PROD cluster (HA)</text>
+                <rect x="345" y="110" width="210" height="80" rx="10" fill="var(--cp-accent-soft)" stroke="var(--cp-accent)" />
+                <text x="450" y="135" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server1 — node A</text>
+                <text x="450" y="155" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server2 — node B</text>
+                <text x="450" y="178" text-anchor="middle" font-size="10" fill="var(--cp-text-muted)">load-balanced · auto-failover</text>
+              </g>
+              <g>
+                <text x="450" y="225" text-anchor="middle" font-size="12" fill="var(--cp-text-muted)" font-weight="600">NON-PROD cluster (HA)</text>
+                <rect x="345" y="235" width="210" height="80" rx="10" fill="var(--cp-accent-soft)" stroke="var(--cp-accent)" />
+                <text x="450" y="260" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server3 — node A</text>
+                <text x="450" y="280" text-anchor="middle" font-size="12" fill="var(--cp-text)">Server4 — node B</text>
+                <text x="450" y="303" text-anchor="middle" font-size="10" fill="var(--cp-text-muted)">dev / test / UAT</text>
+              </g>
+              <g>
+                <text x="450" y="350" text-anchor="middle" font-size="12" fill="var(--cp-text-muted)" font-weight="600">VNet Data Gateway (optional)</text>
+                <rect x="345" y="360" width="210" height="50" rx="10" fill="var(--cp-surface-soft)" stroke="var(--cp-border-strong)" stroke-dasharray="3 3" />
+                <text x="450" y="385" text-anchor="middle" font-size="12" fill="var(--cp-text)">Managed by Microsoft</text>
+                <text x="450" y="400" text-anchor="middle" font-size="10" fill="var(--cp-text-muted)">for Azure-resident sources</text>
+              </g>
+
+              <!-- cloud -->
+              <rect x="625" y="100" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="125" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Microsoft Fabric</text>
+              <text x="745" y="145" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">Capacity · OneLake · workspaces</text>
+
+              <rect x="625" y="180" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="205" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Power BI semantic models</text>
+              <text x="745" y="225" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">Direct Lake · Import · DirectQuery</text>
+
+              <rect x="625" y="260" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="285" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Power Apps · Power Automate</text>
+              <text x="745" y="305" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">via shared connections</text>
+
+              <rect x="625" y="340" width="240" height="60" rx="10" fill="var(--cp-surface)" stroke="var(--cp-border)" />
+              <text x="745" y="365" text-anchor="middle" font-size="13" fill="var(--cp-text)" font-weight="600">Snowflake</text>
+              <text x="745" y="385" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">consumed via Fabric Mirroring</text>
+
+              <!-- arrows source -> clusters (clean) -->
+              <path d="M 270 230 C 310 230, 310 150, 345 150" stroke="var(--cp-accent)" fill="none" stroke-width="1.8" marker-end="url(#arrow2)" />
+              <path d="M 270 260 C 310 260, 310 275, 345 275" stroke="var(--cp-accent)" fill="none" stroke-width="1.8" marker-end="url(#arrow2)" />
+
+              <!-- prod cluster -> cloud (single fat link) -->
+              <path d="M 555 150 C 590 150, 590 130, 625 130" stroke="var(--cp-accent)" fill="none" stroke-width="2" marker-end="url(#arrow2)" />
+              <path d="M 555 150 C 590 150, 590 210, 625 210" stroke="var(--cp-accent)" fill="none" stroke-width="2" marker-end="url(#arrow2)" />
+              <path d="M 555 150 C 590 150, 590 290, 625 290" stroke="var(--cp-accent)" fill="none" stroke-width="2" marker-end="url(#arrow2)" />
+
+              <!-- non-prod cluster -> cloud (dev/test) -->
+              <path d="M 555 275 C 590 275, 590 210, 625 210" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow2g)" />
+
+              <!-- snowflake direct via fabric mirroring -->
+              <path d="M 270 300 C 480 300, 480 370, 625 370" stroke="var(--cp-border-strong)" stroke-dasharray="4 4" fill="none" stroke-width="1.5" marker-end="url(#arrow2g)" />
+
+              <!-- footer bar -->
+              <rect x="40" y="450" width="825" height="50" rx="10" fill="var(--cp-accent-soft)" stroke="var(--cp-accent)" />
+              <text x="452" y="473" text-anchor="middle" font-size="13" fill="var(--cp-accent)" font-weight="700">Central gateway admin · Entra ID · Monitoring · Connection governance</text>
+              <text x="452" y="490" text-anchor="middle" font-size="11" fill="var(--cp-text-muted)">via Fabric admin portal + Log Analytics</text>
+            </svg>
+            <div class="legend">
+              <span><span class="sw" style="background: var(--cp-accent);"></span>Production data path</span>
+              <span><span class="sw" style="background: var(--cp-border-strong);"></span>Non-prod / alternate path</span>
+              <span><span class="sw" style="background: var(--cp-surface-soft); border: 1px dashed var(--cp-border-strong);"></span>Optional / managed component</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- USE CASES -->
+    <section id="use-cases">
+      <div class="container">
+        <h2>The use case, broken down</h2>
+        <p class="section-kicker">
+          Six business + technical workstreams that fall out of the core modernization use case.
+        </p>
+        <div class="grid-3">
+          <div class="card use-case">
+            <span class="num">1</span>
+            <h3>Hybrid analytics enablement</h3>
+            <p>Allow Power BI / Fabric in Azure to access on-prem SQL Server databases, file
+              shares (Linux / network drives), and AD-based data sources via the On-Premises Data
+              Gateway.</p>
+          </div>
+          <div class="card use-case">
+            <span class="num">2</span>
+            <h3>Legacy infrastructure modernization</h3>
+            <p>Replace unsupported Windows Server versions and aging SQL hosts. Move to supported,
+              hardened, dedicated gateway infrastructure to reduce security, stability, and
+              compliance risk.</p>
+          </div>
+          <div class="card use-case">
+            <span class="num">3</span>
+            <h3>Architecture standardization</h3>
+            <p>Centralized, structured design — dedicated clusters with clear separation between
+              production and non-production, defined ownership, and documented governance.</p>
+          </div>
+          <div class="card use-case">
+            <span class="num">4</span>
+            <h3>Connection rationalization</h3>
+            <p>Replace many individual one-off connections with standardized, reusable
+              connectivity patterns. Easier troubleshooting, better performance, less operational
+              overhead.</p>
+          </div>
+          <div class="card use-case">
+            <span class="num">5</span>
+            <h3>Design + advisory engagement</h3>
+            <p>Architecture workshops, implementation support, and a phased migration roadmap —
+              including a cost / effort view for internal vs. Microsoft-assisted delivery.</p>
+          </div>
+          <div class="card use-case">
+            <span class="num">6</span>
+            <h3>Fabric adoption enablement</h3>
+            <p>Gateway redesign is a prerequisite for scaling Microsoft Fabric adoption. Once the
+              gateway tier is modernized, Direct Lake, Mirroring, and Dataflows Gen2 become
+              viable patterns.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ADDITIONAL CONSIDERATIONS -->
+    <section id="additional">
+      <div class="container">
+        <h2>Additional considerations to include</h2>
+        <p class="section-kicker">
+          Items beyond the initial six use cases that are easy to miss but materially affect
+          delivery. Add these to the engagement scope up-front.
+        </p>
+        <div class="checklist">
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Security &amp; compliance baseline</strong><span>HIPAA controls, TLS 1.2+ enforced, data encrypted at rest, gateway recovery key stored in Key Vault.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Network &amp; firewall design</strong><span>Outbound 443 only to Azure Service Tags (PowerBI, ServiceBus, AzureCloud); no inbound; private DNS where applicable.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Gateway sizing &amp; HA</strong><span>Minimum 2 nodes per cluster; 8 vCPU / 16 GB RAM baseline; SSD storage; size for peak concurrent refresh + DirectQuery.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Identity &amp; service accounts</strong><span>Domain service account for the gateway service; least-privilege SQL logins; Entra ID for portal admin; no shared interactive accounts.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Monitoring &amp; alerting</strong><span>Gateway logs to Log Analytics, performance counters, query duration alerts, capacity utilization in Fabric admin.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>DR, backup &amp; recovery key</strong><span>Documented recovery key escrow, gateway re-registration runbook, RPO/RTO targets agreed with the business.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Fabric capacity planning</strong><span>Right-size F-SKU based on workload mix (BI vs. data engineering), enable autoscale, plan workspace-to-capacity assignment.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Refresh schedule optimization</strong><span>Stagger refreshes, prefer incremental refresh / Direct Lake, retire redundant datasets surfaced during inventory.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Cutover plan (parallel run)</strong><span>Run old + new gateways side-by-side, migrate connections in waves, validate refresh + report parity before decommission.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Documentation &amp; runbooks</strong><span>Connection inventory, ownership matrix, restart / failover runbook, change-control process for new connections.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Training &amp; change management</strong><span>Gateway admin training, dataset owner enablement, communication plan for report authors during cutover.</span></div></div>
+          <div class="check"><span class="icon">+</span><div class="body"><strong>Cost optimization</strong><span>Right-size gateway VMs, consolidate idle workspaces, evaluate VNet Data Gateway for Azure-resident sources to avoid VM overhead.</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROADMAP -->
+    <section id="roadmap">
+      <div class="container">
+        <h2>Migration roadmap</h2>
+        <p class="section-kicker">
+          A phased approach that delivers quick wins early, de-risks the cutover, and clears the
+          path for Fabric.
+        </p>
+        <table class="roadmap">
+          <thead>
+            <tr>
+              <th style="width: 16%;">Phase</th>
+              <th style="width: 28%;">Objective</th>
+              <th>Key activities</th>
+              <th style="width: 14%;">Outcome</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>1. Discover</strong></td>
+              <td>Build the full inventory and risk picture</td>
+              <td>Catalog every gateway, host OS/version, connection, owner, refresh schedule, data source, downstream report. Identify duplicates and orphans.</td>
+              <td><span class="pill">Inventory + heatmap</span></td>
+            </tr>
+            <tr>
+              <td><strong>2. Design</strong></td>
+              <td>Lock the target architecture</td>
+              <td>Cluster topology, VM sizing, network &amp; firewall design, identity model, monitoring stack, recovery key escrow, governance model.</td>
+              <td><span class="pill">Architecture pack</span></td>
+            </tr>
+            <tr>
+              <td><strong>3. Build</strong></td>
+              <td>Stand up the new gateway estate</td>
+              <td>Provision Windows Server 2022 hosts (PROD + Non-PROD clusters), install gateway, register to tenant, baseline monitoring, smoke-test connections.</td>
+              <td><span class="pill">New estate live</span></td>
+            </tr>
+            <tr>
+              <td><strong>4. Migrate</strong></td>
+              <td>Move connections in waves (parallel run)</td>
+              <td>Migrate by workspace / business unit, re-point datasets, validate refresh parity, retire duplicates, document each owner sign-off.</td>
+              <td><span class="pill">Connections rationalized</span></td>
+            </tr>
+            <tr>
+              <td><strong>5. Decommission</strong></td>
+              <td>Retire legacy infrastructure</td>
+              <td>Verify no traffic to old gateways for an agreed soak period, archive configuration, shut down legacy hosts, reclaim licenses.</td>
+              <td><span class="pill">Legacy gone</span></td>
+            </tr>
+            <tr>
+              <td><strong>6. Optimize</strong></td>
+              <td>Tune for Fabric &amp; ongoing operations</td>
+              <td>Enable Direct Lake / Mirroring where applicable, tune capacity, refine refresh windows, formalize governance, train admins.</td>
+              <td><span class="pill">Fabric-ready</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- QUICK WINS -->
+    <section id="quick-wins">
+      <div class="container">
+        <h2>Quick wins (first 30 days)</h2>
+        <p class="section-kicker">Low-risk actions the customer can begin immediately, in parallel with the broader design work.</p>
+        <div class="grid-3">
+          <div class="card">
+            <h3>Inventory all gateways</h3>
+            <p style="color: var(--cp-text-muted); margin: 0;">Export from the Fabric admin portal: gateway names, members, host OS, version, connections, owners. This becomes the source of truth.</p>
+          </div>
+          <div class="card">
+            <h3>Identify the top 5 risks</h3>
+            <p style="color: var(--cp-text-muted); margin: 0;">Flag any gateway on an unsupported OS, any single-node cluster supporting prod reporting, and any connection without a named owner.</p>
+          </div>
+          <div class="card">
+            <h3>Stand up a PROD cluster on Server 2022</h3>
+            <p style="color: var(--cp-text-muted); margin: 0;">Two new dedicated nodes, registered as a cluster. Even before migration, this is the landing zone for everything that follows.</p>
+          </div>
+          <div class="card">
+            <h3>Enable gateway logging</h3>
+            <p style="color: var(--cp-text-muted); margin: 0;">Verbose gateway logs to Log Analytics. Establish the performance baseline now, so you can prove improvements after cutover.</p>
+          </div>
+          <div class="card">
+            <h3>Escrow the recovery key</h3>
+            <p style="color: var(--cp-text-muted); margin: 0;">Store the gateway recovery key in Azure Key Vault with documented access — most outages without it become full re-registrations.</p>
+          </div>
+          <div class="card">
+            <h3>Publish a connection request process</h3>
+            <p style="color: var(--cp-text-muted); margin: 0;">Stop the sprawl at the source. Every new connection now requires owner, environment, and data classification before it's provisioned.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TALKING POINTS -->
+    <section id="talking">
+      <div class="container">
+        <h2>Customer-facing talking points</h2>
+        <p class="section-kicker">Use these in exec and architect-level conversations.</p>
+        <div class="talking">
+          <span class="label">Business</span>
+          <p>Modernizing the gateway tier isn't an IT project — it's how you unblock Fabric, reduce
+            audit risk on unsupported OS, and stop paying the operational tax of one-off
+            connections.</p>
+        </div>
+        <div class="talking">
+          <span class="label">Technical</span>
+          <p>Dedicated HA gateway clusters with environment separation, central monitoring, and a
+            documented connection lifecycle is the minimum bar for production analytics workloads
+            in 2026.</p>
+        </div>
+        <div class="talking">
+          <span class="label">Risk</span>
+          <p>Every additional month on Windows Server 2012 + mixed prod/non-prod hosts compounds
+            security exposure, support risk, and the eventual cutover cost.</p>
+        </div>
+        <div class="talking">
+          <span class="label">Path forward</span>
+          <p>A short discover + design engagement (architecture workshops) followed by a phased
+            migration with parallel run gives the customer a low-risk path and a clear cost
+            envelope.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container">
+        <p>Reference architecture · server names anonymized · published for public technical
+          reference</p>
+      </div>
+    </footer>
+
+    <script>
+      const toggle = document.getElementById("themeToggle");
+      toggle.addEventListener("click", () => {
+        const current = document.documentElement.getAttribute("data-theme");
+        const next = current === "dark" ? "light" : "dark";
+        document.documentElement.setAttribute("data-theme", next);
+      });
+    </script>
+  </body>
+</html>
