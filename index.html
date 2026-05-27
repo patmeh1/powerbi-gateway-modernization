@@ -328,6 +328,183 @@
       }
       .talking p { margin: 0; color: var(--cp-text); }
 
+      /* Tabs */
+      .tabs-bar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: var(--cp-bg-elevated);
+        border-bottom: 1px solid var(--cp-border);
+        backdrop-filter: saturate(140%) blur(6px);
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        padding: 10px 0;
+      }
+      .tab-btn {
+        background: transparent;
+        border: 1px solid transparent;
+        color: var(--cp-text-muted);
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-family: inherit;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background 0.15s, color 0.15s, border-color 0.15s;
+      }
+      .tab-btn:hover { color: var(--cp-text); background: var(--cp-surface-soft); }
+      .tab-btn[aria-selected="true"] {
+        background: var(--cp-accent);
+        color: var(--cp-accent-fg);
+        border-color: var(--cp-accent);
+      }
+      .tab-panel[hidden] { display: none; }
+
+      /* Build guide */
+      .step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 64px 1fr;
+        gap: 20px;
+        padding: 28px 28px 28px 24px;
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        border-radius: 16px;
+        margin-bottom: 16px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+      }
+      .step .step-num {
+        display: flex;
+        align-items: flex-start;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 22px;
+        color: var(--cp-accent);
+        background: var(--cp-accent-soft);
+        border-radius: 12px;
+        height: 56px;
+        align-self: start;
+      }
+      .step-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 6px;
+      }
+      .step h3 { margin: 0; font-size: 20px; }
+      .step .step-meta {
+        color: var(--cp-text-muted);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }
+      .step p { color: var(--cp-text-muted); margin: 0 0 12px; }
+      .step h4 {
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--cp-text);
+        margin: 16px 0 8px;
+      }
+      .step ol, .step ul { margin: 0 0 8px; padding-left: 20px; color: var(--cp-text); }
+      .step ol li, .step ul li { margin-bottom: 6px; }
+      .step ol li code, .step ul li code, .step p code {
+        background: var(--cp-surface-soft);
+        border: 1px solid var(--cp-border);
+        border-radius: 4px;
+        padding: 1px 6px;
+        font-size: 12.5px;
+      }
+      pre.code {
+        background: var(--cp-surface-soft);
+        border: 1px solid var(--cp-border);
+        border-radius: 10px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-size: 13px;
+        line-height: 1.5;
+        margin: 8px 0 12px;
+        color: var(--cp-text);
+      }
+      .validation {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-left: 3px solid var(--cp-success);
+        background: rgba(22, 163, 74, 0.06);
+        border-radius: 0 8px 8px 0;
+        color: var(--cp-text);
+        font-size: 14px;
+      }
+      .validation strong {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--cp-success);
+        margin-bottom: 4px;
+      }
+      .note {
+        margin-top: 12px;
+        padding: 12px 14px;
+        border-left: 3px solid var(--cp-warning);
+        background: rgba(245, 158, 11, 0.06);
+        border-radius: 0 8px 8px 0;
+        font-size: 14px;
+      }
+      .note strong {
+        display: block;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--cp-warning);
+        margin-bottom: 4px;
+      }
+      .phase-divider {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin: 32px 0 18px;
+      }
+      .phase-divider .line {
+        flex: 1;
+        height: 1px;
+        background: var(--cp-border);
+      }
+      .phase-divider .label {
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--cp-accent);
+        padding: 4px 12px;
+        background: var(--cp-accent-soft);
+        border-radius: 999px;
+      }
+      .toc {
+        background: var(--cp-surface);
+        border: 1px solid var(--cp-border);
+        border-radius: 16px;
+        padding: 20px 24px;
+        margin-bottom: 28px;
+        box-shadow: 0 0 2px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.14);
+      }
+      .toc h3 { margin: 0 0 12px; }
+      .toc ol {
+        margin: 0;
+        padding-left: 20px;
+        columns: 2;
+        column-gap: 32px;
+      }
+      @media (max-width: 760px) { .toc ol { columns: 1; } }
+      .toc ol li { margin-bottom: 6px; }
+      .toc a { color: var(--cp-link); text-decoration: none; }
+      .toc a:hover { text-decoration: underline; }
+
       footer {
         padding: 32px 0;
         text-align: center;
@@ -378,6 +555,17 @@
         </blockquote>
       </div>
     </header>
+
+    <nav class="tabs-bar" aria-label="Page sections">
+      <div class="container">
+        <div class="tabs" role="tablist">
+          <button class="tab-btn" role="tab" aria-selected="true" aria-controls="tab-reference" id="btn-reference" type="button">Reference &amp; architecture</button>
+          <button class="tab-btn" role="tab" aria-selected="false" aria-controls="tab-build" id="btn-build" type="button">Build guide (step by step)</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="tab-panel" id="tab-reference" role="tabpanel" aria-labelledby="btn-reference">
 
     <!-- PROBLEM -->
     <section id="problem">
@@ -821,6 +1009,393 @@
       </div>
     </section>
 
+    </div><!-- /tab-reference -->
+
+    <div class="tab-panel" id="tab-build" role="tabpanel" aria-labelledby="btn-build" hidden>
+
+      <section>
+        <div class="container">
+          <h2>Build guide — step by step</h2>
+          <p class="section-kicker">
+            A concrete, opinionated build runbook for standing up the target architecture. Each
+            step has actions, commands where useful, and a clear validation check before moving
+            on. Run PROD and Non-PROD as two passes of the same procedure.
+          </p>
+
+          <div class="toc">
+            <h3>What you'll build</h3>
+            <ol>
+              <li><a href="#step-1">Prerequisites &amp; access</a></li>
+              <li><a href="#step-2">Inventory the existing estate</a></li>
+              <li><a href="#step-3">Provision Windows Server 2022 hosts</a></li>
+              <li><a href="#step-4">Open the network path</a></li>
+              <li><a href="#step-5">Create the gateway service identity</a></li>
+              <li><a href="#step-6">Install the gateway on node A</a></li>
+              <li><a href="#step-7">Escrow the recovery key to Key Vault</a></li>
+              <li><a href="#step-8">Add node B and form the HA cluster</a></li>
+              <li><a href="#step-9">Repeat for the Non-PROD cluster</a></li>
+              <li><a href="#step-10">Wire up monitoring &amp; logs</a></li>
+              <li><a href="#step-11">Create connections in Fabric admin portal</a></li>
+              <li><a href="#step-12">Migrate datasets in waves (parallel run)</a></li>
+              <li><a href="#step-13">Validate parity &amp; performance</a></li>
+              <li><a href="#step-14">Decommission legacy gateways</a></li>
+              <li><a href="#step-15">Tune for Fabric &amp; hand off</a></li>
+            </ol>
+          </div>
+
+          <div class="phase-divider"><span class="label">Phase 1 · Plan</span><span class="line"></span></div>
+
+          <article class="step" id="step-1">
+            <div class="step-num">1</div>
+            <div>
+              <div class="step-head"><h3>Prerequisites &amp; access</h3><span class="step-meta">half-day</span></div>
+              <p>Confirm everything you need is approved and provisioned before you touch infrastructure. Missing identity or firewall approvals are the #1 cause of cutover delays.</p>
+              <h4>Actions</h4>
+              <ol>
+                <li>Confirm <strong>Fabric / Power BI Service Administrator</strong> role for at least two named operators.</li>
+                <li>Confirm <strong>Azure subscription Contributor</strong> (or scoped RG Owner) for VM provisioning and Key Vault.</li>
+                <li>Confirm <strong>Active Directory rights</strong> to create a gMSA or service account in the agreed OU.</li>
+                <li>Confirm the firewall team has the change record reference; outbound 443 rules to Azure Service Tags will need approval.</li>
+                <li>Confirm sign-off on the target topology: 2 PROD nodes + 2 Non-PROD nodes (4 VMs total).</li>
+                <li>Confirm an Azure Key Vault exists (or create one) in the same region for recovery key escrow.</li>
+              </ol>
+              <div class="validation"><strong>Done when</strong>All access is granted in writing and verified by signing in to each portal.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-2">
+            <div class="step-num">2</div>
+            <div>
+              <div class="step-head"><h3>Inventory the existing estate</h3><span class="step-meta">1–2 days</span></div>
+              <p>You cannot migrate what you cannot list. Pull a definitive inventory from the Fabric admin portal first — this becomes the migration tracker.</p>
+              <h4>Actions</h4>
+              <ol>
+                <li>Run the Fabric admin PowerShell module against the tenant:</li>
+              </ol>
+<pre class="code">Install-Module -Name MicrosoftPowerBIMgmt -Scope CurrentUser
+Connect-PowerBIServiceAccount
+
+# All gateway clusters and members
+Get-PowerBIGatewayCluster -Scope Organization |
+  Select-Object Id, Name, Type, @{N='Members';E={ ($_.Members.gatewayName) -join ',' }} |
+  Export-Csv .\gateways.csv -NoTypeInformation
+
+# All gateway data sources
+Get-PowerBIGatewayCluster -Scope Organization | ForEach-Object {
+  Get-PowerBIDatasource -GatewayClusterId $_.Id -Scope Organization |
+    Select-Object @{N='Cluster';E={$_.gatewayClusterId}}, Id, DatasourceName, DatasourceType, ConnectionDetails
+} | Export-Csv .\datasources.csv -NoTypeInformation</pre>
+              <ol start="2">
+                <li>For each gateway host, capture: OS version, gateway version, host owner, environment (prod/non-prod), shared vs. dedicated.</li>
+                <li>For each data source, capture: business owner, downstream datasets, refresh frequency, last successful refresh.</li>
+                <li>Flag anything that hasn't refreshed in 90+ days as a decommission candidate.</li>
+              </ol>
+              <div class="validation"><strong>Done when</strong>A single spreadsheet exists with one row per connection, an owner name, and a migration wave assignment.</div>
+            </div>
+          </article>
+
+          <div class="phase-divider"><span class="label">Phase 2 · Provision</span><span class="line"></span></div>
+
+          <article class="step" id="step-3">
+            <div class="step-num">3</div>
+            <div>
+              <div class="step-head"><h3>Provision Windows Server 2022 hosts</h3><span class="step-meta">half-day</span></div>
+              <p>Stand up four dedicated VMs. Two for the PROD cluster, two for Non-PROD. Match the baseline OS hardening you use for other Tier-1 hosts.</p>
+              <h4>Recommended sizing (baseline)</h4>
+              <ul>
+                <li><strong>SKU:</strong> Azure D8s_v5 (8 vCPU / 32 GB / Premium SSD) or equivalent on-prem.</li>
+                <li><strong>OS:</strong> Windows Server 2022 Datacenter, fully patched.</li>
+                <li><strong>Disk:</strong> 128 GB OS, 256 GB data disk for gateway cache (<code>%LocalAppData%\Microsoft\On-premises data gateway</code>).</li>
+                <li><strong>Network:</strong> Static IP, joined to AD, NTP synced.</li>
+              </ul>
+              <h4>Example Azure CLI</h4>
+<pre class="code">RG=rg-fabric-gateway-prod
+LOC=eastus2
+for NAME in server1 server2; do
+  az vm create \
+    --resource-group $RG --location $LOC --name $NAME \
+    --image MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest \
+    --size Standard_D8s_v5 \
+    --vnet-name vnet-fabric --subnet snet-gateway \
+    --admin-username gwadmin --admin-password '&lt;set-in-keyvault&gt;' \
+    --public-ip-address "" \
+    --nsg "" \
+    --data-disk-sizes-gb 256
+done</pre>
+              <div class="note"><strong>Why no public IP</strong>The gateway only requires <em>outbound</em> 443. No inbound from the internet is needed or allowed.</div>
+              <div class="validation"><strong>Done when</strong>All four VMs are pingable from the gateway admin jumpbox, joined to the domain, and show as healthy in your monitoring tool.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-4">
+            <div class="step-num">4</div>
+            <div>
+              <div class="step-head"><h3>Open the network path</h3><span class="step-meta">depends on firewall team</span></div>
+              <p>The gateway communicates with the Power BI service using outbound HTTPS and Azure Relay. Don't open ports broadly — use Azure Service Tags.</p>
+              <h4>Required outbound rules from each gateway host</h4>
+              <ul>
+                <li><strong>TCP 443</strong> → Service Tag <code>PowerBI</code></li>
+                <li><strong>TCP 443</strong> → Service Tag <code>AzureActiveDirectory</code></li>
+                <li><strong>TCP 443</strong> → Service Tag <code>ServiceBus</code></li>
+                <li><strong>TCP 443</strong> → Service Tag <code>AzureCloud</code> (scoped to the home region if possible)</li>
+                <li><strong>TCP 5671/5672</strong> → AMQP fallback (only if you cannot use 443-only HTTPS mode)</li>
+              </ul>
+              <h4>Validation from the host</h4>
+<pre class="code"># PowerShell on each gateway host
+Test-NetConnection -ComputerName api.powerbi.com -Port 443
+Test-NetConnection -ComputerName login.microsoftonline.com -Port 443
+Test-NetConnection -ComputerName &lt;your-region&gt;.servicebus.windows.net -Port 443</pre>
+              <div class="validation"><strong>Done when</strong>All three TCP tests return <code>TcpTestSucceeded : True</code>. DNS resolves cleanly. No proxy auth prompts.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-5">
+            <div class="step-num">5</div>
+            <div>
+              <div class="step-head"><h3>Create the gateway service identity</h3><span class="step-meta">half-day</span></div>
+              <p>Run the gateway service under a dedicated identity. A group Managed Service Account (gMSA) is best — no password to rotate, no expiry surprises.</p>
+              <h4>Create the gMSA</h4>
+<pre class="code"># On a domain controller (one-time, if not already done)
+Add-KdsRootKey -EffectiveTime ((Get-Date).AddHours(-10))
+
+# Create the gMSA and authorize the four gateway hosts
+New-ADServiceAccount -Name gw-svc-prod `
+  -DNSHostName gw-svc-prod.contoso.local `
+  -PrincipalsAllowedToRetrieveManagedPassword "server1$","server2$","server3$","server4$"
+
+# On each gateway host
+Install-ADServiceAccount gw-svc-prod
+Test-ADServiceAccount   gw-svc-prod   # must return True</pre>
+              <h4>SQL Server least-privilege logins</h4>
+              <ul>
+                <li>Create a SQL login per data source the gateway will read.</li>
+                <li>Grant <code>db_datareader</code> only (plus <code>EXECUTE</code> on specific stored procs if required). Never <code>db_owner</code>.</li>
+                <li>Document the mapping in the inventory spreadsheet.</li>
+              </ul>
+              <div class="validation"><strong>Done when</strong><code>Test-ADServiceAccount</code> returns <code>True</code> on all four hosts and SQL logins authenticate from each host using <code>sqlcmd -E</code>.</div>
+            </div>
+          </article>
+
+          <div class="phase-divider"><span class="label">Phase 3 · Install</span><span class="line"></span></div>
+
+          <article class="step" id="step-6">
+            <div class="step-num">6</div>
+            <div>
+              <div class="step-head"><h3>Install the gateway on node A</h3><span class="step-meta">30 min</span></div>
+              <p>Always install the <strong>standard mode</strong> gateway (not personal mode). This is the only mode that supports clustering and central administration.</p>
+              <h4>On Server1 (PROD node A)</h4>
+              <ol>
+                <li>Sign in interactively as a local admin (you'll switch the service to the gMSA after install).</li>
+                <li>Download the latest installer from <code>https://aka.ms/OnPremisesDataGateway</code> (always pull the latest at install time).</li>
+                <li>Run the installer, choose <strong>"On-premises data gateway (standard mode)"</strong>, accept defaults for install path.</li>
+                <li>Sign in with your Entra ID admin account when prompted.</li>
+                <li>Choose <strong>"Register a new gateway on this computer"</strong>.</li>
+                <li>Name it clearly: <code>cluster-prod-fabric</code>.</li>
+                <li>Set a strong recovery key (minimum 16 chars, generated by your password manager). <strong>Do not lose it.</strong></li>
+                <li>After install, switch the gateway service to the gMSA via <em>Service account</em> tab in the gateway app.</li>
+              </ol>
+              <div class="validation"><strong>Done when</strong>The Fabric admin portal &gt; Settings &gt; Manage connections and gateways shows <code>cluster-prod-fabric</code> with status <strong>Online</strong>.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-7">
+            <div class="step-num">7</div>
+            <div>
+              <div class="step-head"><h3>Escrow the recovery key to Key Vault</h3><span class="step-meta">15 min · do not skip</span></div>
+              <p>The recovery key is the only thing that lets you restore the gateway if a node is lost. Without it, you have to re-register every connection from scratch.</p>
+<pre class="code">az keyvault secret set \
+  --vault-name kv-fabric-secrets \
+  --name gateway-cluster-prod-recovery-key \
+  --value '&lt;the recovery key&gt;' \
+  --tags gateway=cluster-prod-fabric createdBy=&lt;you&gt; createdOn=2026-05-27
+
+# Restrict access
+az keyvault set-policy --name kv-fabric-secrets \
+  --object-id &lt;gateway-admins-group-objectid&gt; \
+  --secret-permissions get list</pre>
+              <h4>Document the access process</h4>
+              <ul>
+                <li>Who can retrieve the secret (named group, not individuals).</li>
+                <li>Under what scenarios (node loss, cluster rebuild).</li>
+                <li>Mandatory break-glass approval.</li>
+              </ul>
+              <div class="validation"><strong>Done when</strong>The secret is in Key Vault, soft-delete is enabled, and a non-admin on the gateway-admins group can <code>az keyvault secret show</code> it.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-8">
+            <div class="step-num">8</div>
+            <div>
+              <div class="step-head"><h3>Add node B and form the HA cluster</h3><span class="step-meta">30 min</span></div>
+              <p>Two-node clusters give you load balancing and failover. A single-node "cluster" is not HA — never run prod on one node.</p>
+              <h4>On Server2 (PROD node B)</h4>
+              <ol>
+                <li>Run the same installer.</li>
+                <li>Sign in with the same Entra ID admin account used on node A.</li>
+                <li>Choose <strong>"Add to an existing gateway cluster"</strong>.</li>
+                <li>Select <code>cluster-prod-fabric</code> from the dropdown.</li>
+                <li>Enter the recovery key retrieved from Key Vault.</li>
+                <li>Switch the service to the same gMSA.</li>
+              </ol>
+              <div class="validation"><strong>Done when</strong>The cluster shows <strong>2 members, both Online</strong>, and load balancing is enabled in cluster settings.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-9">
+            <div class="step-num">9</div>
+            <div>
+              <div class="step-head"><h3>Repeat for the Non-PROD cluster</h3><span class="step-meta">1 hour</span></div>
+              <p>Repeat steps 6–8 on <code>Server3</code> and <code>Server4</code>. Name the cluster <code>cluster-nonprod-fabric</code>. Use a <em>different</em> recovery key, escrow separately, use a Non-PROD gMSA.</p>
+              <div class="note"><strong>Why separate</strong>A shared recovery key or shared service account couples your prod and non-prod blast radius. Keep them fully independent.</div>
+              <div class="validation"><strong>Done when</strong>Two clusters exist in the admin portal: <code>cluster-prod-fabric</code> (2 nodes) and <code>cluster-nonprod-fabric</code> (2 nodes), both Online.</div>
+            </div>
+          </article>
+
+          <div class="phase-divider"><span class="label">Phase 4 · Operate</span><span class="line"></span></div>
+
+          <article class="step" id="step-10">
+            <div class="step-num">10</div>
+            <div>
+              <div class="step-head"><h3>Wire up monitoring &amp; logs</h3><span class="step-meta">half-day</span></div>
+              <p>You cannot tune what you cannot see. Get gateway telemetry flowing to Log Analytics on day one — baselines collected now make every later perf claim defensible.</p>
+              <h4>Enable additional logging</h4>
+              <ol>
+                <li>In the gateway app on each node, go to <strong>Diagnostics</strong>.</li>
+                <li>Enable <strong>Additional logging</strong>.</li>
+                <li>Set <strong>Query execution &amp; refresh history report</strong> to ON.</li>
+              </ol>
+              <h4>Forward to Log Analytics</h4>
+              <ol>
+                <li>Install the <strong>Azure Monitor Agent (AMA)</strong> on each gateway host (via Azure Arc if on-prem).</li>
+                <li>Create a Data Collection Rule (DCR) that picks up:
+                  <ul>
+                    <li><code>C:\Users\&lt;gMSA&gt;\AppData\Local\Microsoft\On-premises data gateway\Gateway*.log</code></li>
+                    <li>Windows Performance Counters: CPU %, Memory available MB, Disk queue length</li>
+                    <li>Windows Event Log: Application (filter Source = "Mashup*")</li>
+                  </ul>
+                </li>
+              </ol>
+              <h4>Alerts to create</h4>
+              <ul>
+                <li>Gateway cluster status = <strong>Offline</strong> for &gt; 5 min → page on-call.</li>
+                <li>Refresh failure rate &gt; 5% over 1 hour → email gateway-admins.</li>
+                <li>CPU &gt; 85% sustained 15 min → email gateway-admins (capacity warning).</li>
+                <li>Heartbeat missed from a single node &gt; 2 min → ticket (HA degraded, not down).</li>
+              </ul>
+              <div class="validation"><strong>Done when</strong>A Log Analytics workspace query like <code>AzureDiagnostics | where Category == "GatewayLogs"</code> returns rows from all four nodes within 15 minutes.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-11">
+            <div class="step-num">11</div>
+            <div>
+              <div class="step-head"><h3>Create connections in the Fabric admin portal</h3><span class="step-meta">1–2 days</span></div>
+              <p>Create <em>one connection per data source</em> on the new cluster — not one per dataset. This is where you eliminate the sprawl.</p>
+              <h4>Per data source</h4>
+              <ol>
+                <li>In Fabric &gt; <strong>Manage connections and gateways</strong> &gt; <strong>+ New</strong>.</li>
+                <li>Choose <strong>On-premises</strong>, select <code>cluster-prod-fabric</code>.</li>
+                <li>Connection type: SQL Server / File / SharePoint / etc.</li>
+                <li>Use the least-privilege SQL login created in step 5 (or Windows auth via the gMSA where supported).</li>
+                <li>Name it deterministically: <code>sql-{server}-{db}-prod</code>, e.g. <code>sql-finance-edw-prod</code>.</li>
+                <li>Set the connection to <strong>"Use SSO via Kerberos for DirectQuery"</strong> only if the source supports it and the business need is established.</li>
+                <li>Grant <strong>connection users</strong> to the owning workspace's service principal / group (no individual user grants).</li>
+              </ol>
+              <div class="validation"><strong>Done when</strong>The "Test connection" succeeds for every source, and a smoke-test report bound to the new connection refreshes successfully.</div>
+            </div>
+          </article>
+
+          <div class="phase-divider"><span class="label">Phase 5 · Migrate &amp; cut over</span><span class="line"></span></div>
+
+          <article class="step" id="step-12">
+            <div class="step-num">12</div>
+            <div>
+              <div class="step-head"><h3>Migrate datasets in waves (parallel run)</h3><span class="step-meta">multi-week</span></div>
+              <p>Never big-bang. Pick a wave (workspace or business unit), repoint its datasets to the new connection, and run old + new in parallel until you have parity sign-off.</p>
+              <h4>For each dataset in the wave</h4>
+              <ol>
+                <li>Open the dataset's settings in Fabric.</li>
+                <li>Under <strong>Gateway and cloud connections</strong>, map each data source to the matching new connection (created in step 11).</li>
+                <li>Trigger a manual refresh.</li>
+                <li>Confirm refresh duration is within ±20% of the legacy baseline.</li>
+                <li>Leave the old connection in place but unbound — that's the rollback path during the soak window.</li>
+                <li>Email the dataset owner: "migrated, please validate within 5 business days".</li>
+              </ol>
+              <div class="note"><strong>Wave size</strong>Keep waves under ~20 datasets. Smaller waves catch problems before they compound and make rollback trivial.</div>
+              <div class="validation"><strong>Done when</strong>Every dataset in the wave has refreshed successfully against the new connection at least 3 times AND the owner has signed off in the tracker.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-13">
+            <div class="step-num">13</div>
+            <div>
+              <div class="step-head"><h3>Validate parity &amp; performance</h3><span class="step-meta">per wave</span></div>
+              <p>You're proving two things: <em>same numbers</em> (data parity) and <em>same or better speed</em> (performance parity).</p>
+              <h4>Data parity</h4>
+              <ul>
+                <li>For 3 representative reports per wave: compare row counts and a handful of aggregate measures (sum of sales, distinct customer count) between old-gateway snapshot and new.</li>
+                <li>Any drift &gt; 0.1% must be root-caused before sign-off.</li>
+              </ul>
+              <h4>Performance parity</h4>
+              <ul>
+                <li>Capture refresh duration trends from Log Analytics over a 5-day window.</li>
+                <li>Capture DirectQuery query duration p95 from the Power BI usage metrics report.</li>
+                <li>Investigate any &gt; 25% regression.</li>
+              </ul>
+              <div class="validation"><strong>Done when</strong>Parity report attached to the migration ticket, signed by data owner and gateway lead.</div>
+            </div>
+          </article>
+
+          <article class="step" id="step-14">
+            <div class="step-num">14</div>
+            <div>
+              <div class="step-head"><h3>Decommission legacy gateways</h3><span class="step-meta">at end of soak</span></div>
+              <p>Only after a documented soak period (recommend 14 days of zero traffic on the old cluster) do you start shutting things down.</p>
+              <h4>Steps</h4>
+              <ol>
+                <li>Query gateway logs / usage metrics to confirm <strong>zero refreshes and zero DirectQuery hits</strong> on the legacy cluster for 14 consecutive days.</li>
+                <li>In the admin portal, set the legacy cluster to <strong>Disable</strong> (don't delete yet).</li>
+                <li>Wait 7 more days — gives any monthly / quarterly jobs a chance to surface.</li>
+                <li>Export the legacy configuration (cluster definition, data source list) and archive it.</li>
+                <li>Stop the gateway service, then uninstall.</li>
+                <li>Shut down the legacy VMs. Wait 30 days, then delete VMs and reclaim storage/licenses.</li>
+              </ol>
+              <div class="validation"><strong>Done when</strong>Legacy cluster is removed from the admin portal, hosts are powered off, and the change record is closed with archived configuration attached.</div>
+            </div>
+          </article>
+
+          <div class="phase-divider"><span class="label">Phase 6 · Optimize</span><span class="line"></span></div>
+
+          <article class="step" id="step-15">
+            <div class="step-num">15</div>
+            <div>
+              <div class="step-head"><h3>Tune for Fabric &amp; hand off to ops</h3><span class="step-meta">ongoing</span></div>
+              <p>The build is done — but the platform isn't truly "delivered" until ops can run it without you.</p>
+              <h4>Tuning</h4>
+              <ul>
+                <li><strong>Refresh staggering:</strong> spread schedules across the hour to avoid 7:00 AM stampedes.</li>
+                <li><strong>Incremental refresh:</strong> enable on any dataset &gt; 1 GB or with &gt; 30 day history.</li>
+                <li><strong>Direct Lake / Mirroring:</strong> for sources that support it (Snowflake, SQL DB), consider removing the gateway hop entirely.</li>
+                <li><strong>Capacity rightsizing:</strong> review Fabric capacity utilization weekly for the first month — scale up or autoscale based on actual.</li>
+              </ul>
+              <h4>Handover artifacts to operations</h4>
+              <ul>
+                <li>Architecture diagram (current target state).</li>
+                <li>Connection inventory + owner matrix (kept current).</li>
+                <li>Restart / failover / node-replacement runbook.</li>
+                <li>Recovery key escrow location and access process.</li>
+                <li>Monitoring alert list and on-call rotation.</li>
+                <li>Change-control process for new data source connections.</li>
+              </ul>
+              <div class="validation"><strong>Done when</strong>Ops has run at least one rehearsed failover drill (drain node A, confirm node B carries the load, restore node A) without your involvement.</div>
+            </div>
+          </article>
+
+        </div>
+      </section>
+
+    </div><!-- /tab-build -->
+
     <footer>
       <div class="container">
         <p>Reference architecture · server names anonymized · published for public technical
@@ -835,6 +1410,33 @@
         const next = current === "dark" ? "light" : "dark";
         document.documentElement.setAttribute("data-theme", next);
       });
+
+      const tabButtons = document.querySelectorAll(".tab-btn");
+      const tabPanels = document.querySelectorAll(".tab-panel");
+
+      function selectTab(tabId) {
+        tabButtons.forEach((btn) => {
+          const isSelected = btn.getAttribute("aria-controls") === tabId;
+          btn.setAttribute("aria-selected", isSelected ? "true" : "false");
+        });
+        tabPanels.forEach((panel) => {
+          if (panel.id === tabId) panel.removeAttribute("hidden");
+          else panel.setAttribute("hidden", "");
+        });
+        if (history.replaceState) {
+          const hash = tabId === "tab-build" ? "#build" : "";
+          history.replaceState(null, "", window.location.pathname + window.location.search + hash);
+        }
+        window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+      }
+
+      tabButtons.forEach((btn) => {
+        btn.addEventListener("click", () => selectTab(btn.getAttribute("aria-controls")));
+      });
+
+      if (window.location.hash === "#build") {
+        selectTab("tab-build");
+      }
     </script>
   </body>
 </html>
